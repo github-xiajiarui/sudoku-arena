@@ -73,7 +73,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 #tm{color:#b08ba8}
 </style></head><body>
 <div id="app">
-<h1>🧩 数独 · 积分版 <span style="font-size:12px;font-weight:400;color:#c0a0b0">v1.15</span></h1>
+<h1>🧩 数独 · 积分版 <span style="font-size:12px;font-weight:400;color:#c0a0b0">v1.16</span></h1>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -205,12 +205,73 @@ function genPuzzle(empty){
   return {p:tp,s:sol}
 }
 
+
+// ===== 谜题变换（保证看起来不同） =====
+function cloneGrid(g){var r=[];for(var i=0;i<9;i++){r[i]=[];for(var j=0;j<9;j++)r[i][j]=g[i][j]}return r}
+
+function applyTransform(pz,op){
+  var p=cloneGrid(pz.p), s=cloneGrid(pz.s), tmp;
+  if(op===1){
+    for(var r=0;r<9;r++)for(var c=0;c<4;c++){tmp=p[r][c];p[r][c]=p[r][8-c];p[r][8-c]=tmp;tmp=s[r][c];s[r][c]=s[r][8-c];s[r][8-c]=tmp}
+  }else if(op===2){
+    for(var c=0;c<9;c++)for(var r=0;r<4;r++){tmp=p[r][c];p[r][c]=p[8-r][c];p[8-r][c]=tmp;tmp=s[r][c];s[r][c]=s[8-r][c];s[8-r][c]=tmp}
+  }else if(op===3){
+    var np=[],ns=[];for(var i=0;i<9;i++){np[i]=[];ns[i]=[];for(var j=0;j<9;j++){np[i][j]=p[8-j][i];ns[i][j]=s[8-j][i]}};p=np;s=ns
+  }else if(op===4){
+    for(var r=0;r<9;r++)for(var c=0;c<9;c++){p[r][c]=pz.p[8-r][8-c];s[r][c]=pz.s[8-r][8-c]}
+  }else if(op===5){
+    var np=[],ns=[];for(var i=0;i<9;i++){np[i]=[];ns[i]=[];for(var j=0;j<9;j++){np[i][j]=p[j][8-i];ns[i][j]=s[j][8-i]}};p=np;s=ns
+  }
+  return {p:p,s:s}
+}
+
+// ===== 预生成管理系统 =====
+var PUZZLE_POOL=[[],[],[],[],[]];
+var POOL_SIZE=20;
+var POOL_FILLING=[false,false,false,false,false];
+var GEN_TIMEOUT=1000;
+
+function fillPool(diffIdx){
+  if(POOL_FILLING[diffIdx])return;
+  POOL_FILLING[diffIdx]=true;
+  var dd=D[diffIdx];
+  function batchFill(){
+    var start=Date.now();
+    while(PUZZLE_POOL[diffIdx].length<POOL_SIZE && Date.now()-start<300){
+      var res=genPuzzle(dd.e);
+      if(res&&res.p){PUZZLE_POOL[diffIdx].push(res)}
+    }
+    if(PUZZLE_POOL[diffIdx].length<POOL_SIZE){
+      setTimeout(batchFill,50);
+    }else{
+      POOL_FILLING[diffIdx]=false;
+    }
+  }
+  batchFill();
+}
+
+function getFromPool(diffIdx){
+  var pool=PUZZLE_POOL[diffIdx];
+  if(pool.length===0){
+    var r=genPuzzle(D[diffIdx].e);return r&&r.p?r:null}
+  var idx=Math.random()*pool.length|0;
+  var pz=pool.splice(idx,1)[0];
+  var op=Math.random()*6|0;
+  return applyTransform(pz,op);
+}
+
 // ===== 游戏核心 =====
 function initGame(diffIdx){
   curDiff=diffIdx;hintCnt=0;hintSet={};sr=-1;sc=-1;nm=false;
   var dd=D[diffIdx];
   emptyCells=dd.e;
-  var res=genPuzzle(dd.e);
+  var res=null;
+  var t0=Date.now();
+  res=genPuzzle(dd.e);
+  if(Date.now()-t0>=GEN_TIMEOUT||!res||!res.p){
+    res=getFromPool(diffIdx);
+  }
+  if(!res||!res.p)res=genPuzzle(dd.e);
   g=res.p;sol=res.s;
   b=[];n=[];
   for(var r=0;r<9;r++){
@@ -227,6 +288,7 @@ function initGame(diffIdx){
   dr(1);dn();st();
   document.getElementById('msg').textContent='';
   document.getElementById('hd').style.display='block';
+  fillPool(diffIdx);
 }
 
 function dr(anim){
@@ -501,7 +563,7 @@ function showPanel(){
     if(sc[i]==0)sv.textContent='0分';
     var left=document.createElement('span');left.appendChild(nm);left.appendChild(em);
     btn.appendChild(left);btn.appendChild(sv);
-    btn.onclick=function(ii){return function(){initGame(ii)}}(i);
+    btn.onclick=function(ii){return function(){initGame(ii);fillPool(ii)}}(i);
     dl.appendChild(btn)
   }
 }
@@ -524,5 +586,7 @@ document.getElementById('bN').onclick=function(){nm=!nm;document.getElementById(
 document.getElementById('bM').onclick=showPanel;
 
 showPanel();
+for(var di=0;di<D.length;di++)setTimeout(function(i){return function(){fillPool(i)}}(di),100);
+
 </script>
 </body></html>
