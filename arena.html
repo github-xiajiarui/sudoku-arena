@@ -37,12 +37,13 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 .nb:active{background:#fce4ec;transform:scale(.95)}
 .nb.x{background:#ffe8ee;color:#e87a9d;border-color:#f0b0c8}
 .nb.ds{background:#e8f0f8;color:#6a8aaa;border-color:#b0c8e0;font-size:clamp(12px,3vw,14px);padding:6px 0}
-#act{width:100%;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+#act{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+#act2{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px}
 .bt{background:#fff;border:1.5px solid #f0d0dd;border-radius:8px;color:#b08ba8;font-size:clamp(12px,3vw,14px);padding:8px 0;cursor:pointer;text-align:center;box-shadow:0 1px 4px rgba(200,140,170,0.08)}
 .bt:active{background:#fce4ec}
 .bt.on{background:#e87a9d;color:#fff;border-color:#e87a9d;box-shadow:0 2px 8px rgba(232,122,157,0.3)}
 #msg{min-height:24px;font-size:13px;color:#7fb3d3;text-align:center;padding:4px;line-height:1.4}
-#hd{display:none;width:100%;background:#fff8fa;border:1.5px solid #f0c0d0;border-radius:10px;padding:10px 12px;margin:6px 0;font-size:13px;color:#7a6a7a;line-height:1.6;text-align:left;box-shadow:0 1px 6px rgba(200,140,170,0.1)}
+#hd{display:none;width:100%;background:#fff8fa;border:1.5px solid #f0c0d0;border-radius:10px;padding:10px 12px;margin:6px 0 2px;font-size:13px;color:#7a6a7a;line-height:1.6;text-align:left;box-shadow:0 1px 6px rgba(200,140,170,0.1)}
 #hd b{color:#e87a9d}
 
 /* 难度选择面板 */
@@ -62,6 +63,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 </style></head><body>
 <div id="app">
 <h1>🧩 数独 · 积分版</h1>
+<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.0 · 实时生成唯一解 · 五难度积分系统</div>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -69,17 +71,21 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 <div id="gameArea">
   <div id="topBar">
     <span class="left"><span id="dn">初级</span> · <span id="scMsg"></span></span>
-    <span><button class="bt" id="bM" style="padding:4px 8px;font-size:11px">⬅ 难度</button> <span id="tm">⏱ 00:00</span></span>
+    <span><span id="tm">⏱ 00:00</span></span>
   </div>
   <table id="tbl"></table>
   <div id="msg"></div>
   <div id="npd"></div>
   <div id="act">
+    <button class="bt" id="bM2" style="display:none">⬅ 难度</button>
     <button class="bt" id="bR">🔄 重置</button>
+    <button class="bt" id="bM">⬅ 难度</button>
+  </div>
+  <div id="act2">
     <button class="bt" id="bH">💡 提示</button>
     <button class="bt" id="bN">✏️ 笔记</button>
   </div>
-  <div id="hd"></div>
+  <div id="hd">💡 点击 <b>提示</b> 按钮或按 <b>H</b> 键获得推理提示，使用提示会扣除积分（1 提示 = 1 分）</div>
 </div>
 </div>
 <script>
@@ -197,7 +203,7 @@ function initGame(diffIdx){
   document.getElementById('gameArea').style.display='flex';
   dr(1);dn();st();
   document.getElementById('msg').textContent='';
-  document.getElementById('hd').style.display='none';
+  document.getElementById('hd').style.display='block';
 }
 
 function dr(anim){
@@ -252,8 +258,8 @@ function ip(v){
     else if(n[r][c].has(v))n[r][c].delete(v);else n[r][c].add(v);
     b[r][c]=0
   }else{n[r][c].clear();b[r][c]=v}
-  dr();dn();document.getElementById('hd').style.display='none';
-  if(fn()){win()}
+  dr();dn();
+  if(fn()){win()}}
 }
 
 function dn(){
@@ -389,15 +395,13 @@ function sb2(){
 function dh(){
   var h=fh();
   if(!h){
-    document.getElementById('msg').textContent='✅ 已全部填完，无可推导步骤';
-    document.getElementById('hd').style.display='none';return;
+    document.getElementById('msg').textContent='✅ 已全部填完，无可推导步骤';return;
   }
   b[h.r][h.c]=h.v;n[h.r][h.c].clear();
   hintSet[h.r+','+h.c]=true;
   hintCnt++;
   document.getElementById('scMsg').textContent='积分：'+Math.max(0,emptyCells-hintCnt);
   sr=h.r;sc=h.c;dr();dn();
-  document.getElementById('hd').style.display='none';
   document.getElementById('msg').textContent='💡 ('+(h.r+1)+','+(h.c+1)+') = '+h.v;
   sr=-1;sc=-1;
   setTimeout(function(){sr=h.r;sc=h.c;dr();dn();
