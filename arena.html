@@ -45,6 +45,8 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 #msg{min-height:24px;font-size:13px;color:#7fb3d3;text-align:center;padding:4px;line-height:1.4}
 #hd{display:none;width:100%;background:#fff8fa;border:1.5px solid #f0c0d0;border-radius:10px;padding:10px 12px;margin:6px 0 2px;font-size:13px;color:#7a6a7a;line-height:1.6;text-align:left;box-shadow:0 1px 6px rgba(200,140,170,0.1)}
 #hd b{color:#e87a9d}
+#hd .v{color:#d4728a;font-weight:700;font-size:16px}
+#hd .step{color:#b08ba8;font-size:12px}
 
 /* 难度选择面板 */
 #selPanel{display:flex;flex-direction:column;align-items:center;width:100%;padding:20px 0;flex:1;justify-content:center}
@@ -63,7 +65,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 </style></head><body>
 <div id="app">
 <h1>🧩 数独 · 积分版</h1>
-<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.6 · 实时生成唯一解 · 五难度积分系统</div>
+<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.7 · 实时生成唯一解 · 五难度积分系统</div>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -336,28 +338,40 @@ function gc(){
   return c
 }
 
+function getRowNums(r){var s=[];for(var i=0;i<9;i++)if(b[r][i])s.push(b[r][i]);return s.join('、')||'无'}
+function getColNums(c){var s=[];for(var i=0;i<9;i++)if(b[i][c])s.push(b[i][c]);return s.join('、')||'无'}
+function getBoxNums(r,c){var br=(r/3|0)*3,bc=(c/3|0)*3,s=[];for(var i=br;i<br+3;i++)for(var j=bc;j<bc+3;j++)if(b[i][j])s.push(b[i][j]);return s.join('、')||'无'}
+
 function fh(){
   var c=gc(),h=null;
+  // Naked Single
   for(var r=0;r<9&&!h;r++)for(var k=0;k<9&&!h;k++){
     if(b[r][k]==0&&c[r][k].size===1){
       var v=Array.from(c[r][k])[0];
-      h={r:r,c:k,v:v};
+      h={r:r,c:k,v:v,rt:'naked_single',
+        reason:'该格行已有 '+getRowNums(r)+'，列已有 '+getColNums(k)+'，宫已有 '+getBoxNums(r,k)+'，所以只能填 '+v};
     }
   }
   if(h)return h;
+  // Hidden Single (row)
   for(var r=0;r<9&&!h;r++)for(var v=1;v<=9&&!h;v++){
     var ks=[];for(var k=0;k<9;k++)if(c[r][k].has(v))ks.push(k);
-    if(ks.length===1){h={r:r,c:ks[0],v:v}}
+    if(ks.length===1){h={r:r,c:ks[0],v:v,rt:'hidden_row',
+      reason:'第'+(r+1)+'行已有 '+getRowNums(r)+'，'+v+'在其他列均被排除，只能放在此处'}}
   }
   if(h)return h;
+  // Hidden Single (col)
   for(var k=0;k<9&&!h;k++)for(var v=1;v<=9&&!h;v++){
     var rs=[];for(var r=0;r<9;r++)if(c[r][k].has(v))rs.push(r);
-    if(rs.length===1){h={r:rs[0],c:k,v:v}}
+    if(rs.length===1){h={r:rs[0],c:k,v:v,rt:'hidden_col',
+      reason:'第'+(k+1)+'列已有 '+getColNums(k)+'，'+v+'在其他行均被排除，只能放在此处'}}
   }
   if(h)return h;
+  // Hidden Single (box)
   for(var br=0;br<9&&!h;br+=3)for(var bk=0;bk<9&&!h;bk+=3)for(var v=1;v<=9&&!h;v++){
     var cs=[];for(var r=br;r<br+3;r++)for(var k=bk;k<bk+3;k++)if(c[r][k].has(v))cs.push([r,k]);
-    if(cs.length===1){var r=cs[0][0],k=cs[0][1];h={r:r,c:k,v:v}}
+    if(cs.length===1){var r=cs[0][0],k=cs[0][1];h={r:r,c:k,v:v,rt:'hidden_box',
+      reason:'第'+(br/3*3+bk/3+1)+'宫已有 '+getBoxNums(r,k)+'，'+v+'在其他格均被排除，只能放在此处'}}
   }
   if(h)return h;
   // Backtracking fallback
@@ -370,7 +384,9 @@ function fh(){
     for(var t=0;t<cans.length;t++){
       var tv=cans[t],sb=[];for(var i=0;i<9;i++){sb[i]=[];for(var j=0;j<9;j++)sb[i][j]=b[i][j]}
       b[br][bc]=tv;
-      if(sb2()){b=sb;h={r:br,c:bc,v:tv};return h}
+      if(sb2()){var others=cans.filter(function(x){return x!==tv}).join('、');b=sb;
+        h={r:br,c:bc,v:tv,rt:'trial',
+          reason:'试数推导：格子 ('+(br+1)+','+(bc+1)+') 只能填 '+tv+'，填其他数（'+others+'）会导致无解'};return h}
       b=sb;
     }
   }
@@ -408,6 +424,12 @@ function dh(){
   for(var rr=0;rr<9;rr++)for(var cc=0;cc<9;cc++)if(b[rr][cc]&&!g[rr][cc]&&!hintSet[rr+','+cc])filled++;
   document.getElementById('scMsg').textContent='进度：'+filled+'/'+emptyCells+' 提示：'+hintCnt;
   sr=h.r;sc=h.c;dr();dn();
+  // 构建提示描述
+  var ruleMap={naked_single:'唯一候选数',hidden_row:'行隐性唯一',hidden_col:'列隐性唯一',hidden_box:'宫隐性唯一',trial:'试数推导'};
+  var d=document.getElementById('hd');
+  d.innerHTML='<b>'+(h.r+1)+'行'+(h.c+1)+'列 填 '+h.v+'</b><br>'+
+    '<span style="color:#888;font-size:12px">规则：'+(ruleMap[h.rt]||'推导')+'</span><br>'+
+    '<span style="color:#b0bec5;font-size:12px">'+h.reason+'</span>';
   document.getElementById('msg').textContent='💡 ('+(h.r+1)+','+(h.c+1)+') = '+h.v;
   sr=-1;sc=-1;
   setTimeout(function(){sr=h.r;sc=h.c;dr();dn();
