@@ -48,6 +48,15 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 #hd .v{color:#d4728a;font-weight:700;font-size:16px}
 #hd .step{color:#b08ba8;font-size:12px}
 
+/* 通关弹窗 */
+#winPanel{display:none;position:fixed;inset:0;background:rgba(90,74,90,0.55);z-index:100;align-items:center;justify-content:center}
+#winBox{background:#fff8fa;border:2px solid #f0c0d0;border-radius:16px;padding:28px 24px;text-align:center;max-width:320px;width:90%;box-shadow:0 8px 32px rgba(200,140,170,0.25)}
+#winBox h2{font-size:22px;color:#e87a9d;margin-bottom:8px}
+#winBox .scLine{font-size:16px;color:#7a6a7a;margin:4px 0}
+#winBox .scLine b{color:#e87a9d;font-size:22px}
+#winBox .sub{font-size:13px;color:#b08ba8;margin:12px 0 6px}
+#winBox .tapHint{font-size:12px;color:#c0a8b8;margin-top:12px}
+
 /* 难度选择面板 */
 #selPanel{display:flex;flex-direction:column;align-items:center;width:100%;padding:20px 0;flex:1;justify-content:center}
 #selPanel h2{font-size:20px;color:#e87a9d;margin-bottom:16px}
@@ -65,7 +74,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 </style></head><body>
 <div id="app">
 <h1>🧩 数独 · 积分版</h1>
-<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.8 · 实时生成唯一解 · 五难度积分系统</div>
+<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.9 · 实时生成唯一解 · 五难度积分系统</div>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -88,6 +97,16 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
     <button class="bt" id="bN">✏️ 笔记</button>
   </div>
   <div id="hd">💡 点击 <b>提示</b> 按钮或按 <b>H</b> 键获得推理提示，使用提示会扣除积分（1 提示 = 1 分）</div>
+</div>
+<div id="winPanel" onclick="showPanel()">
+  <div id="winBox" onclick="event.stopPropagation()">
+    <h2>🎉 通关！</h2>
+    <div class="scLine">得分：<b id="winScore">0</b> 分</div>
+    <div class="scLine" id="winTotal" style="font-size:14px;color:#b08ba8"></div>
+    <div class="sub">进度 <span id="winProg">0</span>/<span id="winMax">0</span> · 提示 <span id="winHints">0</span> 次</div>
+    <div class="sub" id="winFormula" style="font-size:12px"></div>
+    <div class="tapHint">👆 点击任意位置返回</div>
+  </div>
 </div>
 </div>
 <script>
@@ -332,17 +351,24 @@ function st(){
 }
 
 // ===== 通关 & 积分 =====
-function win(){
-  document.getElementById('msg').textContent='🎉 完成！';
-  var score=Math.max(0,emptyCells-hintCnt);
+function showWin(score){
   var sc=loadScores();sc[curDiff]+=score;saveScores(sc);
-  document.getElementById('scMsg').textContent='积分 +'+score+'（累计'+sc[curDiff]+'分）';
-  setTimeout(function(){
-    document.getElementById('msg').textContent='';
-    var t=document.getElementById('tbl');
-    for(var a=0;a<9;a++)for(var y=0;y<9;y++)t.rows[a].cells[y].className+=' fu';
-  },300);
-  if(ti)clearInterval(ti)
+  document.getElementById('winScore').textContent=score;
+  document.getElementById('winTotal').textContent='累计 '+D[curDiff].n+' '+sc[curDiff]+' 分';
+  document.getElementById('winProg').textContent=emptyCells-hintCnt;
+  document.getElementById('winMax').textContent=emptyCells;
+  document.getElementById('winHints').textContent=hintCnt;
+  document.getElementById('winFormula').textContent='积分 = '+emptyCells+'（空格）- '+hintCnt+'（提示）= '+score;
+  // 飞走动画
+  var t=document.getElementById('tbl');
+  for(var a=0;a<9;a++)for(var y=0;y<9;y++)t.rows[a].cells[y].className+=' fu';
+  if(ti)clearInterval(ti);
+  setTimeout(function(){document.getElementById('winPanel').style.display='flex'},700)
+}
+
+function win(){
+  var score=Math.max(0,emptyCells-hintCnt);
+  showWin(score)
 }
 
 // ===== 提示 =====
@@ -458,18 +484,7 @@ function dh(){
   document.getElementById('msg').textContent='💡 ('+(h.r+1)+','+(h.c+1)+') = '+h.v;
   sr=-1;sc=-1;
   setTimeout(function(){sr=h.r;sc=h.c;dr();dn();
-    if(fn()){
-      document.getElementById('msg').textContent='🎉 完成！';
-      var score=Math.max(0,emptyCells-hintCnt);
-      var sc=loadScores();sc[curDiff]+=score;saveScores(sc);
-      document.getElementById('scMsg').textContent='积分 +'+score+'（累计'+sc[curDiff]+'分）';
-      setTimeout(function(){
-        document.getElementById('msg').textContent='';
-        var t=document.getElementById('tbl');
-        for(var a=0;a<9;a++)for(var y=0;y<9;y++)t.rows[a].cells[y].className+=' fu';
-      },300);
-      if(ti)clearInterval(ti)
-    }
+    if(fn()){var s=Math.max(0,emptyCells-hintCnt);showWin(s)}
   },200)
 }
 
