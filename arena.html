@@ -63,7 +63,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 </style></head><body>
 <div id="app">
 <h1>🧩 数独 · 积分版</h1>
-<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.1 · 实时生成唯一解 · 五难度积分系统</div>
+<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.2 · 实时生成唯一解 · 五难度积分系统</div>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -201,6 +201,9 @@ function initGame(diffIdx){
   document.getElementById('scMsg').textContent='积分：0';
   document.getElementById('selPanel').style.display='none';
   document.getElementById('gameArea').style.display='flex';
+  // 自动选中第一个空格
+  var found=false;
+  for(var r=0;r<9&&!found;r++)for(var c=0;c<9&&!found;c++){if(!g[r][c]){sr=r;sc=c;found=true}}
   dr(1);dn();st();
   document.getElementById('msg').textContent='';
   document.getElementById('hd').style.display='block';
