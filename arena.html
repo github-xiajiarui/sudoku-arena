@@ -65,7 +65,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 </style></head><body>
 <div id="app">
 <h1>🧩 数独 · 积分版</h1>
-<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.7 · 实时生成唯一解 · 五难度积分系统</div>
+<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.8 · 实时生成唯一解 · 五难度积分系统</div>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -273,16 +273,41 @@ function ip(v){
 
 function dn(){
   var npd=document.getElementById('npd');npd.innerHTML='';
-  // Count numbers placed
-  var cnt={};for(var i=1;i<=9;i++)cnt[i]=0;
-  for(var rr=0;rr<9;rr++)for(var cc=0;cc<9;cc++)if(b[rr][cc]&&!g[rr][cc])cnt[b[rr][cc]]++;
-  for(var v=1;v<=9;v++){
-    var btn=document.createElement('button');btn.className='nb';
-    if(cnt[v]>=9){btn.style.opacity='0.3';btn.style.pointerEvents='none'}
-    btn.textContent=v;
-    btn.onclick=function(vv){return function(){ip(vv)}}(v);
-    npd.appendChild(btn)
-  }
+  for(var x=1;x<=9;x++){(function(v){
+    var cnt=0;for(var rr=0;rr<9;rr++)for(var cc=0;cc<9;cc++)if(b[rr][cc]===v)cnt++;
+    var disabled=cnt>=9;
+
+    // 功能: 行列宫最后一个空 → 只允许正确数字
+    if(sr>=0&&!disabled){
+      var r=sr,c=sc;
+      if(!g[r][c]&&b[r][c]===0){
+        var emptyRow=0,emptyCol=0,emptyBox=0;
+        for(var k=0;k<9;k++){
+          if(b[r][k]==0)emptyRow++;
+          if(b[k][c]==0)emptyCol++;
+        }
+        var br=(r/3|0)*3,bc=(c/3|0)*3;
+        for(var i=br;i<br+3;i++)for(var j=bc;j<bc+3;j++)if(b[i][j]==0)emptyBox++;
+        if(emptyRow===1||emptyCol===1||emptyBox===1){
+          var hasConflict=false;
+          if(emptyRow===1){var seen={};for(var k=0;k<9;k++){var nv=b[r][k];if(nv&&seen[nv]){hasConflict=true;break}seen[nv]=1}}
+          if(!hasConflict&&emptyCol===1){var seen={};for(var k=0;k<9;k++){var nv=b[k][c];if(nv&&seen[nv]){hasConflict=true;break}seen[nv]=1}}
+          if(!hasConflict&&emptyBox===1){var seen={};for(var i=br;i<br+3;i++)for(var j=bc;j<bc+3;j++){var nv=b[i][j];if(nv&&seen[nv]){hasConflict=true;break}seen[nv]=1}}
+          if(!hasConflict){
+            var correct;
+            if(emptyRow===1){for(var n=1;n<=9;n++){var found=false;for(var k=0;k<9;k++)if(b[r][k]===n){found=true;break}if(!found){correct=n;break}}}
+            else if(emptyCol===1){for(var n=1;n<=9;n++){var found=false;for(var k=0;k<9;k++)if(b[k][c]===n){found=true;break}if(!found){correct=n;break}}}
+            else{for(var n=1;n<=9;n++){var found=false;for(var i=br;i<br+3;i++)for(var j=bc;j<bc+3;j++)if(b[i][j]===n){found=true;i=br+3;break}if(!found){correct=n;break}}}
+            if(v!==correct)disabled=true;
+          }
+        }
+      }
+    }
+
+    var btn=document.createElement('button');btn.className='nb';btn.textContent=v;
+    if(disabled){btn.style.opacity='0.3';btn.style.background='#f0e8ec';btn.disabled=true}
+    btn.onclick=function(){ip(v)};npd.appendChild(btn)
+  })(x)}
   var e=document.createElement('button');e.className='nb x';e.textContent='✕';
   e.onclick=function(){ip(0)};npd.appendChild(e)
 }
