@@ -244,7 +244,7 @@ function dr(anim){
       if(r%3==2&&r<8)td.className+=' bb3';
       if(v){
         var sp=document.createElement('div');sp.className='c';sp.textContent=v;td.appendChild(sp);
-        if(g[r][c]){td.className+=' gv';sp.style.animationDelay=(r*9+c)*20+'ms'}else td.className+=' fl'
+        if(g[r][c]){td.className+=' gv';sp.style.animationDelay=(r*9+c)*20+'ms'}else{td.className+=' fl';if(!vl(r,c,v))td.className+=' er'}
       }
       var hk=r+','+c;
       if(hintSet[hk]&&!g[r][c])td.className+=' ht';
