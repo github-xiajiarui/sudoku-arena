@@ -63,7 +63,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 </style></head><body>
 <div id="app">
 <h1>🧩 数独 · 积分版</h1>
-<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.5 · 实时生成唯一解 · 五难度积分系统</div>
+<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.6 · 实时生成唯一解 · 五难度积分系统</div>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -198,7 +198,7 @@ function initGame(diffIdx){
     for(var c=0;c<9;c++){b[r][c]=g[r][c];n[r][c]=new Set()}
   }
   document.getElementById('dn').textContent=dd.n;
-  document.getElementById('scMsg').textContent='积分：0/'+emptyCells;
+  document.getElementById('scMsg').textContent='进度：0/'+emptyCells+' 提示：0';
   document.getElementById('selPanel').style.display='none';
   document.getElementById('gameArea').style.display='flex';
   // 自动选中第一个空格
@@ -261,7 +261,10 @@ function ip(v){
     else if(n[r][c].has(v))n[r][c].delete(v);else n[r][c].add(v);
     b[r][c]=0
   }else{n[r][c].clear();b[r][c]=v}
-  document.getElementById('scMsg').textContent='积分：'+Math.max(0,emptyCells-hintCnt)+'/'+emptyCells;
+  // 统计已填格数（自己填的，不含提示的格子）
+  var filled=0;
+  for(var rr=0;rr<9;rr++)for(var cc=0;cc<9;cc++)if(b[rr][cc]&&!g[rr][cc]&&!hintSet[rr+','+cc])filled++;
+  document.getElementById('scMsg').textContent='进度：'+filled+'/'+emptyCells+' 提示：'+hintCnt;
   dr();dn();
   if(fn()){win()}
 }
@@ -401,7 +404,9 @@ function dh(){
   b[h.r][h.c]=h.v;n[h.r][h.c].clear();
   hintSet[h.r+','+h.c]=true;
   hintCnt++;
-  document.getElementById('scMsg').textContent='积分：'+Math.max(0,emptyCells-hintCnt)+'/'+emptyCells;
+  var filled=0;
+  for(var rr=0;rr<9;rr++)for(var cc=0;cc<9;cc++)if(b[rr][cc]&&!g[rr][cc]&&!hintSet[rr+','+cc])filled++;
+  document.getElementById('scMsg').textContent='进度：'+filled+'/'+emptyCells+' 提示：'+hintCnt;
   sr=h.r;sc=h.c;dr();dn();
   document.getElementById('msg').textContent='💡 ('+(h.r+1)+','+(h.c+1)+') = '+h.v;
   sr=-1;sc=-1;
