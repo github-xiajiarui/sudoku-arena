@@ -74,7 +74,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 </style></head><body>
 <div id="app">
 <h1>🧩 数独 · 积分版</h1>
-<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.10 · 实时生成唯一解 · 五难度积分系统</div>
+<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.11 · 实时生成唯一解 · 五难度积分系统</div>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -112,10 +112,10 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 <script>
 // ===== 难度定义 =====
 var D=[
-  {n:'初级',e:20},
-  {n:'中级',e:30},
-  {n:'高级',e:40},
-  {n:'专家',e:50},
+  {n:'初级',e:43},
+  {n:'中级',e:46},
+  {n:'高级',e:49},
+  {n:'专家',e:52},
   {n:'大师',e:55}
 ];
 var curDiff=-1,b=[],g=[],n=[],sol=[],sr=-1,sc=-1,nm=false,se=0,ti=0,hintSet={},hintCnt=0,emptyCells=0;
