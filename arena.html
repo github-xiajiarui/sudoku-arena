@@ -63,7 +63,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 </style></head><body>
 <div id="app">
 <h1>🧩 数独 · 积分版</h1>
-<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.2 · 实时生成唯一解 · 五难度积分系统</div>
+<div style="font-size:11px;color:#c0a8b8;margin-bottom:2px">v1.3 · 实时生成唯一解 · 五难度积分系统</div>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -267,9 +267,6 @@ function ip(v){
 
 function dn(){
   var npd=document.getElementById('npd');npd.innerHTML='';
-  if(sr<0)return;
-  var r=sr,c=sc;
-  if(g[r][c])return;
   // Count numbers placed
   var cnt={};for(var i=1;i<=9;i++)cnt[i]=0;
   for(var rr=0;rr<9;rr++)for(var cc=0;cc<9;cc++)if(b[rr][cc]&&!g[rr][cc])cnt[b[rr][cc]]++;
