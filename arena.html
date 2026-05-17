@@ -73,7 +73,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 #tm{color:#b08ba8}
 </style></head><body>
 <div id="app">
-<h1>🧩 数独 · 积分版 <span style="font-size:12px;font-weight:400;color:#c0a0b0">v1.21</span></h1>
+<h1>🧩 数独 · 积分版 <span style="font-size:12px;font-weight:400;color:#c0a0b0">v1.22</span></h1>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -162,39 +162,37 @@ function initGame(diffIdx){
   for(var r=0;r<9;r++){g[r]=[];sol[r]=[];for(var c=0;c<9;c++){g[r][c]=+puz[r*9+c];sol[r][c]=+ans[r*9+c]}}
   // 多步随机变换：对称变换 + 数字重映射 + 宫内行/列互换
   function cloneGrid(gr){var rr=[];for(var i=0;i<9;i++){rr[i]=[];for(var j=0;j<9;j++)rr[i][j]=gr[i][j]}return rr}
-  var pg=cloneGrid(g),ps=cloneGrid(sol),tmp;
+  var pg=cloneGrid(g),ps=cloneGrid(sol),tmp,rr,cc,ii,jj,np,ns;
 
-  // 1. 对称变换（左右/上下翻、旋转、转置等）
+  // 1. 对称变换（翻转/旋转）
   var op=Math.random()*6|0;
   if(op===1){
-    for(var r=0;r<9;r++)for(var c=0;c<4;c++){tmp=pg[r][c];pg[r][c]=pg[r][8-c];pg[r][8-c]=tmp;tmp=ps[r][c];ps[r][c]=ps[r][8-c];ps[r][8-c]=tmp}
+    for(rr=0;rr<9;rr++)for(cc=0;cc<4;cc++){tmp=pg[rr][cc];pg[rr][cc]=pg[rr][8-cc];pg[rr][8-cc]=tmp;tmp=ps[rr][cc];ps[rr][cc]=ps[rr][8-cc];ps[rr][8-cc]=tmp}
   }else if(op===2){
-    for(var c=0;c<9;c++)for(var r=0;r<4;r++){tmp=pg[r][c];pg[r][c]=pg[8-r][c];pg[8-r][c]=tmp;tmp=ps[r][c];ps[r][c]=ps[8-r][c];ps[8-r][c]=tmp}
+    for(cc=0;cc<9;cc++)for(rr=0;rr<4;rr++){tmp=pg[rr][cc];pg[rr][cc]=pg[8-rr][cc];pg[8-rr][cc]=tmp;tmp=ps[rr][cc];ps[rr][cc]=ps[8-rr][cc];ps[8-rr][cc]=tmp}
   }else if(op===3){
-    var np=[],ns=[];for(var i=0;i<9;i++){np[i]=[];ns[i]=[];for(var j=0;j<9;j++){np[i][j]=pg[8-j][i];ns[i][j]=ps[8-j][i]}};pg=np;ps=ns
+    np=[];ns=[];for(ii=0;ii<9;ii++){np[ii]=[];ns[ii]=[];for(jj=0;jj<9;jj++){np[ii][jj]=pg[8-jj][ii];ns[ii][jj]=ps[8-jj][ii]}};pg=np;ps=ns
   }else if(op===4){
-    for(var r=0;r<9;r++)for(var c=0;c<9;c++){pg[r][c]=g[8-r][8-c];ps[r][c]=sol[8-r][8-c]}
+    np=[];ns=[];for(ii=0;ii<9;ii++){np[ii]=[];ns[ii]=[];for(jj=0;jj<9;jj++){np[ii][jj]=pg[8-ii][8-jj];ns[ii][jj]=ps[8-ii][8-jj]}};pg=np;ps=ns
   }else if(op===5){
-    var np=[],ns=[];for(var i=0;i<9;i++){np[i]=[];ns[i]=[];for(var j=0;j<9;j++){np[i][j]=pg[j][8-i];ns[i][j]=ps[j][8-i]}};pg=np;ps=ns
+    np=[];ns=[];for(ii=0;ii<9;ii++){np[ii]=[];ns[ii]=[];for(jj=0;jj<9;jj++){np[ii][jj]=pg[jj][8-ii];ns[ii][jj]=ps[jj][8-ii]}};pg=np;ps=ns
   }
 
-  // 2. 数字重映射：随机排列1-9的映射
+  // 2. 数字重映射：随机排列1-9
   var pm=[1,2,3,4,5,6,7,8,9];
-  for(var i=8;i>0;i--){var j=Math.random()*(i+1)|0;tmp=pm[i];pm[i]=pm[j];pm[j]=tmp}
-  for(var r=0;r<9;r++)for(var c=0;c<9;c++){if(pg[r][c])pg[r][c]=pm[pg[r][c]-1];ps[r][c]=pm[ps[r][c]-1]}
+  for(ii=8;ii>0;ii--){jj=Math.random()*(ii+1)|0;tmp=pm[ii];pm[ii]=pm[jj];pm[jj]=tmp}
+  for(rr=0;rr<9;rr++)for(cc=0;cc<9;cc++){if(pg[rr][cc])pg[rr][cc]=pm[pg[rr][cc]-1];ps[rr][cc]=pm[ps[rr][cc]-1]}
 
-  // 3. 宫内行互换（每个3行块内随机交换两行）
-  for(var b=0;b<3;b++){
-    var br=b*3;
-    if(Math.random()<0.5){var r1=br+2,r2=br+(Math.random()*2|0);for(var c=0;c<9;c++){tmp=pg[r1][c];pg[r1][c]=pg[r2][c];pg[r2][c]=tmp;tmp=ps[r1][c];ps[r1][c]=ps[r2][c];ps[r2][c]=tmp}}
-    if(Math.random()<0.5){var r1=br,r2=br+1;for(var c=0;c<9;c++){tmp=pg[r1][c];pg[r1][c]=pg[r2][c];pg[r2][c]=tmp;tmp=ps[r1][c];ps[r1][c]=ps[r2][c];ps[r2][c]=tmp}}
+  // 3. 宫内行互换
+  for(var bi=0;bi<3;bi++){
+    if(Math.random()<0.5){rr=bi*3;for(cc=0;cc<9;cc++){tmp=pg[rr][cc];pg[rr][cc]=pg[rr+1][cc];pg[rr+1][cc]=tmp;tmp=ps[rr][cc];ps[rr][cc]=ps[rr+1][cc];ps[rr+1][cc]=tmp}}
+    if(Math.random()<0.4){rr=bi*3+2;ii=bi*3+(Math.random()*2|0);for(cc=0;cc<9;cc++){tmp=pg[rr][cc];pg[rr][cc]=pg[ii][cc];pg[ii][cc]=tmp;tmp=ps[rr][cc];ps[rr][cc]=ps[ii][cc];ps[ii][cc]=tmp}}
   }
 
-  // 4. 宫内列互换（每个3列块内随机交换两列）
-  for(var b=0;b<3;b++){
-    var bc=b*3;
-    if(Math.random()<0.5){var c1=bc+2,c2=bc+(Math.random()*2|0);for(var r=0;r<9;r++){tmp=pg[r][c1];pg[r][c1]=pg[r][c2];pg[r][c2]=tmp;tmp=ps[r][c1];ps[r][c1]=ps[r][c2];ps[r][c2]=tmp}}
-    if(Math.random()<0.5){var c1=bc,c2=bc+1;for(var r=0;r<9;r++){tmp=pg[r][c1];pg[r][c1]=pg[r][c2];pg[r][c2]=tmp;tmp=ps[r][c1];ps[r][c1]=ps[r][c2];ps[r][c2]=tmp}}
+  // 4. 宫内列互换
+  for(var bj=0;bj<3;bj++){
+    if(Math.random()<0.5){cc=bj*3;for(rr=0;rr<9;rr++){tmp=pg[rr][cc];pg[rr][cc]=pg[rr][cc+1];pg[rr][cc+1]=tmp;tmp=ps[rr][cc];ps[rr][cc]=ps[rr][cc+1];ps[rr][cc+1]=tmp}}
+    if(Math.random()<0.4){cc=bj*3+2;jj=bj*3+(Math.random()*2|0);for(rr=0;rr<9;rr++){tmp=pg[rr][cc];pg[rr][cc]=pg[rr][jj];pg[rr][jj]=tmp;tmp=ps[rr][cc];ps[rr][cc]=ps[rr][jj];ps[rr][jj]=tmp}}
   }
 
   g=pg;sol=ps;
