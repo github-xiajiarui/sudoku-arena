@@ -73,7 +73,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 #tm{color:#b08ba8}
 </style></head><body>
 <div id="app">
-<h1>🧩 数独 · 积分版 <span style="font-size:12px;font-weight:400;color:#c0a0b0">v1.20</span></h1>
+<h1>🧩 数独 · 积分版 <span style="font-size:12px;font-weight:400;color:#c0a0b0">v1.21</span></h1>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -160,10 +160,12 @@ function initGame(diffIdx){
   var puz=raw.substr(0,81),ans=raw.substr(81);
   g=[];sol=[];
   for(var r=0;r<9;r++){g[r]=[];sol[r]=[];for(var c=0;c<9;c++){g[r][c]=+puz[r*9+c];sol[r][c]=+ans[r*9+c]}}
-  // 随机变换
-  var op=Math.random()*6|0;
+  // 多步随机变换：对称变换 + 数字重映射 + 宫内行/列互换
   function cloneGrid(gr){var rr=[];for(var i=0;i<9;i++){rr[i]=[];for(var j=0;j<9;j++)rr[i][j]=gr[i][j]}return rr}
   var pg=cloneGrid(g),ps=cloneGrid(sol),tmp;
+
+  // 1. 对称变换（左右/上下翻、旋转、转置等）
+  var op=Math.random()*6|0;
   if(op===1){
     for(var r=0;r<9;r++)for(var c=0;c<4;c++){tmp=pg[r][c];pg[r][c]=pg[r][8-c];pg[r][8-c]=tmp;tmp=ps[r][c];ps[r][c]=ps[r][8-c];ps[r][8-c]=tmp}
   }else if(op===2){
@@ -175,6 +177,26 @@ function initGame(diffIdx){
   }else if(op===5){
     var np=[],ns=[];for(var i=0;i<9;i++){np[i]=[];ns[i]=[];for(var j=0;j<9;j++){np[i][j]=pg[j][8-i];ns[i][j]=ps[j][8-i]}};pg=np;ps=ns
   }
+
+  // 2. 数字重映射：随机排列1-9的映射
+  var pm=[1,2,3,4,5,6,7,8,9];
+  for(var i=8;i>0;i--){var j=Math.random()*(i+1)|0;tmp=pm[i];pm[i]=pm[j];pm[j]=tmp}
+  for(var r=0;r<9;r++)for(var c=0;c<9;c++){if(pg[r][c])pg[r][c]=pm[pg[r][c]-1];ps[r][c]=pm[ps[r][c]-1]}
+
+  // 3. 宫内行互换（每个3行块内随机交换两行）
+  for(var b=0;b<3;b++){
+    var br=b*3;
+    if(Math.random()<0.5){var r1=br+2,r2=br+(Math.random()*2|0);for(var c=0;c<9;c++){tmp=pg[r1][c];pg[r1][c]=pg[r2][c];pg[r2][c]=tmp;tmp=ps[r1][c];ps[r1][c]=ps[r2][c];ps[r2][c]=tmp}}
+    if(Math.random()<0.5){var r1=br,r2=br+1;for(var c=0;c<9;c++){tmp=pg[r1][c];pg[r1][c]=pg[r2][c];pg[r2][c]=tmp;tmp=ps[r1][c];ps[r1][c]=ps[r2][c];ps[r2][c]=tmp}}
+  }
+
+  // 4. 宫内列互换（每个3列块内随机交换两列）
+  for(var b=0;b<3;b++){
+    var bc=b*3;
+    if(Math.random()<0.5){var c1=bc+2,c2=bc+(Math.random()*2|0);for(var r=0;r<9;r++){tmp=pg[r][c1];pg[r][c1]=pg[r][c2];pg[r][c2]=tmp;tmp=ps[r][c1];ps[r][c1]=ps[r][c2];ps[r][c2]=tmp}}
+    if(Math.random()<0.5){var c1=bc,c2=bc+1;for(var r=0;r<9;r++){tmp=pg[r][c1];pg[r][c1]=pg[r][c2];pg[r][c2]=tmp;tmp=ps[r][c1];ps[r][c1]=ps[r][c2];ps[r][c2]=tmp}}
+  }
+
   g=pg;sol=ps;
   b=[];n=[];
   for(var r=0;r<9;r++){
