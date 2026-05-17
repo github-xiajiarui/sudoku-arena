@@ -73,7 +73,7 @@ h1{font-size:18px;padding:6px 0;color:#e87a9d;letter-spacing:1px}
 #tm{color:#b08ba8}
 </style></head><body>
 <div id="app">
-<h1>🧩 数独 · 积分版 <span style="font-size:12px;font-weight:400;color:#c0a0b0">v1.22</span></h1>
+<h1>🧩 数独 · 积分版 <span style="font-size:12px;font-weight:400;color:#c0a0b0">v1.23</span></h1>
 <div id="selPanel">
   <h2>选择难度开始游戏</h2>
   <div id="diffList"></div>
@@ -361,13 +361,14 @@ function cn(c){return c+1}
 function bn(r,c){return (r/3|0)*3+(c/3|0)+1}
 
 function gc(){
-  var c=Array.from({length:9},function(){return Array.from({length:9},function(){return new Set()})});
+  var c=[];
+  for(var ri=0;ri<9;ri++){c[ri]=[];for(var ci=0;ci<9;ci++)c[ri][ci]={}}
   for(var r=0;r<9;r++)for(var k=0;k<9;k++){
     if(b[r][k])continue;
-    var s=new Set([1,2,3,4,5,6,7,8,9]);
-    for(var i=0;i<9;i++){if(b[r][i])s.delete(b[r][i]);if(b[i][k])s.delete(b[i][k])}
+    var s={};for(var xi=1;xi<=9;xi++)s[xi]=1;
+    for(var i=0;i<9;i++){if(b[r][i])delete s[b[r][i]];if(b[i][k])delete s[b[i][k]]}
     var br=(r/3|0)*3,bk=(k/3|0)*3;
-    for(var i=br;i<br+3;i++)for(var j=bk;j<bk+3;j++)if(b[i][j])s.delete(b[i][j]);
+    for(var i=br;i<br+3;i++)for(var j=bk;j<bk+3;j++)if(b[i][j])delete s[b[i][j]];
     c[r][k]=s
   }
   return c
@@ -381,30 +382,30 @@ function fh(){
   var c=gc(),h=null;
   // Naked Single
   for(var r=0;r<9&&!h;r++)for(var k=0;k<9&&!h;k++){
-    if(b[r][k]==0&&c[r][k].size===1){
-      var v=Array.from(c[r][k])[0];
+    if(b[r][k]==0){var sz=0,lastV;for(var _x in c[r][k]){sz++;lastV=+_x}if(sz===1){
+      var v=lastV;
       h={r:r,c:k,v:v,rt:'naked_single',
         reason:'该格行已有 '+getRowNums(r)+'，列已有 '+getColNums(k)+'，宫已有 '+getBoxNums(r,k)+'，所以只能填 '+v};
-    }
+    }}
   }
   if(h)return h;
   // Hidden Single (row)
   for(var r=0;r<9&&!h;r++)for(var v=1;v<=9&&!h;v++){
-    var ks=[];for(var k=0;k<9;k++)if(c[r][k].has(v))ks.push(k);
+    var ks=[];for(var k=0;k<9;k++)if(c[r][k][v])ks.push(k);
     if(ks.length===1){h={r:r,c:ks[0],v:v,rt:'hidden_row',
       reason:'第'+(r+1)+'行已有 '+getRowNums(r)+'，'+v+'在其他列均被排除，只能放在此处'}}
   }
   if(h)return h;
   // Hidden Single (col)
   for(var k=0;k<9&&!h;k++)for(var v=1;v<=9&&!h;v++){
-    var rs=[];for(var r=0;r<9;r++)if(c[r][k].has(v))rs.push(r);
+    var rs=[];for(var r=0;r<9;r++)if(c[r][k][v])rs.push(r);
     if(rs.length===1){h={r:rs[0],c:k,v:v,rt:'hidden_col',
       reason:'第'+(k+1)+'列已有 '+getColNums(k)+'，'+v+'在其他行均被排除，只能放在此处'}}
   }
   if(h)return h;
   // Hidden Single (box)
   for(var br=0;br<9&&!h;br+=3)for(var bk=0;bk<9&&!h;bk+=3)for(var v=1;v<=9&&!h;v++){
-    var cs=[];for(var r=br;r<br+3;r++)for(var k=bk;k<bk+3;k++)if(c[r][k].has(v))cs.push([r,k]);
+    var cs=[];for(var r=br;r<br+3;r++)for(var k=bk;k<bk+3;k++)if(c[r][k][v])cs.push([r,k]);
     if(cs.length===1){var r=cs[0][0],k=cs[0][1];h={r:r,c:k,v:v,rt:'hidden_box',
       reason:'第'+(br/3*3+bk/3+1)+'宫已有 '+getBoxNums(r,k)+'，'+v+'在其他格均被排除，只能放在此处'}}
   }
@@ -412,10 +413,10 @@ function fh(){
   // Backtracking fallback
   var br=-1,bc=-1,bs=10;
   for(var r=0;r<9;r++)for(var k=0;k<9;k++){
-    if(b[r][k]==0&&c[r][k].size>0&&c[r][k].size<bs){br=r;bc=k;bs=c[r][k].size}
+    if(b[r][k]==0){var sz=0;for(var _x in c[r][k])sz++;if(sz>0&&sz<bs){br=r;bc=k;bs=sz}}
   }
   if(br>=0){
-    var cans=Array.from(c[br][bc]);
+    var cans=[];for(var _x in c[br][bc])cans.push(+_x);
     for(var t=0;t<cans.length;t++){
       var tv=cans[t],sb=[];for(var i=0;i<9;i++){sb[i]=[];for(var j=0;j<9;j++)sb[i][j]=b[i][j]}
       b[br][bc]=tv;
